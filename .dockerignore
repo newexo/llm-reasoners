@@ -1,0 +1,11 @@
+.git
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+htmlcov
+.coverage
+*.log
+logs/
+.idea
+.vscode
