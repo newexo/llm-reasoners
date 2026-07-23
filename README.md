@@ -44,7 +44,7 @@
 
 - **Intuitive Visualization and Interpretation**: Our library provides a [visualization tool](https://www.llm-reasoners.net/) to aid users in comprehending the reasoning process. Even for complex reasoning algorithms like Monte-Carlo Tree Search, users can easily diagnose and understand the process with **one line of python code**. See an exmaple in the tutorial [notebook](demo.ipynb).
  
-- **Efficient Reasoning with LLM**: Our library optimizes the performance of advanced reasoning techniques by integrating [SGLang](https://github.com/sgl-project/sglang), a high-performance LLM inference framework, featuring structured generation (Check out this [thread](https://x.com/MaitrixOrg/status/1885387184557199857) and [example](https://github.com/maitrix-org/llm-reasoners/tree/main/examples/Inference-Scaling-SGL/math500)). We also support other LLM backends like `huggingface transformers`, `OpenAI API`, `Exllama`, `fairscale`, `llama.cpp`, etc.
+- **Efficient Reasoning with LLM**: Our library optimizes the performance of advanced reasoning techniques by integrating [SGLang](https://github.com/sgl-project/sglang), a high-performance LLM inference framework, featuring structured generation (Check out this [thread](https://x.com/MaitrixOrg/status/1885387184557199857) and [example](https://github.com/maitrix-org/llm-reasoners/tree/main/examples/Inference-Scaling-SGL/math500)). We also support other LLM backends like `huggingface transformers`, `OpenAI API`, `fairscale`, `llama.cpp`, etc.
 
 - **Rigorous Implementation and Reproducibility**: We prioritize precision and reliability in our implementations, ensuring that our algorithms are not just theoretical concepts but practically usable tools. All methods implemented in LLM Reasoners are carefully engineered to be faithful to their original formulations and performance. It powers our [analysis](https://arxiv.org/abs/2404.05221) of reasoning algorithms published in COLM2024.
 
@@ -276,7 +276,7 @@ git clone https://github.com/Ber666/llm-reasoners --recursive
 cd llm-reasoners
 pip install -e .
 ```
-Adding `--recursive` will help you clone exllama and LLM-Planning automatically. Note that some other optional modules may require other dependencies. Please refer to the error message for details.
+Adding `--recursive` will help you clone LLM-Planning automatically. Note that some other optional modules may require other dependencies. Please refer to the error message for details.
 
 ## Citation
 This project is an extension of the following paper:
