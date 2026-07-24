@@ -2,6 +2,7 @@ import pickle
 from typing import Type, Callable, Optional, Literal
 
 import numpy as np
+import torch
 from tqdm import tqdm
 from datetime import datetime
 import copy
