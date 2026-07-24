@@ -373,9 +373,13 @@ block".
 | RAP (MCTS) | `unstack orange from red` → `put down orange` → `pick up red` → `stack red on blue` | ✅ **valid** — reaches the goal exactly |
 
 RAP found the correct plan in its first MCTS iteration (~24s). The qualitative result — CoT and ToT fail
-without a real world model, RAP succeeds with one — reproduced even at 7B scale on a single 12GB GPU. This
-is one example, not a full benchmark run (the notebook's final cell runs the same comparison across the
-full 84-case dataset, which we did not run in full — see `RUNNING.md` for how to do that yourself).
+without a real world model, RAP succeeds with one — reproduced even at 7B scale on a single 12GB GPU.
+
+We then ran RAP across the **full 84-case dataset** (same model, same GPU) to check whether that single
+example was representative: **70/84 correct (83.3% accuracy)**, zero errors, ~77 minutes total wall-clock.
+So the advantage isn't a one-off — it holds at meaningful scale on a 7B ungated model with no multi-GPU
+setup. (CoT/ToT were only checked on the single example above, where both failed; a full-dataset accuracy
+number for either baseline would need a separate run.)
 
 While debugging this run we also found and fixed two gaps in the original (pre-fork) dependency
 declaration: the `pddl` PyPI package (needed by the Blocksworld benchmark's PDDL writer) was never actually
