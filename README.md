@@ -375,17 +375,27 @@ block".
 RAP found the correct plan in its first MCTS iteration (~24s). The qualitative result — CoT and ToT fail
 without a real world model, RAP succeeds with one — reproduced even at 7B scale on a single 12GB GPU.
 
-We then ran RAP across the **full 84-case dataset** (same model, same GPU) to check whether that single
-example was representative: **70/84 correct (83.3% accuracy)**, zero errors, ~77 minutes total wall-clock.
-So the advantage isn't a one-off — it holds at meaningful scale on a 7B ungated model with no multi-GPU
-setup. (CoT/ToT were only checked on the single example above, where both failed; a full-dataset accuracy
-number for either baseline would need a separate run.)
+We then ran **all three methods across the full 84-case dataset** (same model, same GPU) to check whether
+that single example was representative:
 
-While debugging this run we also found and fixed two gaps in the original (pre-fork) dependency
-declaration: the `pddl` PyPI package (needed by the Blocksworld benchmark's PDDL writer) was never actually
-listed in `setup.py`, and the Docker image was missing `python3-dev`, needed at runtime by `triton`'s JIT
-compilation on first CUDA kernel dispatch. Both are now declared explicitly rather than relying on them
-happening to already be present.
+| Method | Accuracy | Wall-clock (84 cases) |
+|---|---|---|
+| CoT | 5/84 — **5.95%** | ~2 minutes |
+| ToT (BeamSearch) | 13/84 — **15.48%** | ~4h 23m |
+| RAP (MCTS) | 70/84 — **83.33%** | ~77 minutes |
+
+Zero errors in any of the three runs. So the advantage isn't a one-off — RAP beats both baselines by a wide
+margin at meaningful scale, on a 7B ungated model with no multi-GPU setup. (ToT costs far more per case
+than RAP despite scoring much worse — `BeamSearch` always runs its full search width per step, while
+`MCTS` benefits from terminating early once a case's goal is reached.)
+
+While debugging these runs we also found and fixed real gaps in the original (pre-fork) code, not just in
+this fork's own new infrastructure: the `pddl` PyPI package (needed by the Blocksworld benchmark's PDDL
+writer) was never actually listed in `setup.py`; the Docker image was missing `python3-dev`, needed at
+runtime by `triton`'s JIT compilation on first CUDA kernel dispatch; `examples/CoT/blocksworld/cot_inference.py`
+still imported the now-removed `ExLlamaModel` at module level; and `examples/ToT/blocksworld/tot_inference.py`
+used `torch.distributed` in a function reachable without `torch` ever being imported. All fixed with small,
+targeted changes rather than broader rewrites.
 
 ## Citation
 This project is an extension of the following paper:
