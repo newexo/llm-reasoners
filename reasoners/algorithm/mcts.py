@@ -11,7 +11,7 @@ from abc import ABC
 from collections import defaultdict
 
 import numpy as np
-from tqdm import trange
+from tqdm import tqdm, trange
 
 from .. import SearchAlgorithm, WorldModel, SearchConfig, State, Action, Example, Trace
 
@@ -130,6 +130,7 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
                  uct_with_fast_reward: bool = True,
                  aggregator: Optional[MCTSAggregation] = None,
                  disable_tqdm: bool = True,
+                 log_tree_stats: bool = False,
                  node_visualizer: Callable[[MCTSNode], dict] = lambda x: x.__dict__):
         """
         MCTS algorithm
@@ -150,6 +151,9 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
                                 Outputs *None* if no trajectory with terminal node but required
         :param uct_with_fast_reward: if True, use fast_reward instead of reward for unvisited children in UCT
                                      Otherwise, visit the *unvisited* children with maximum fast_reward first
+        :param log_tree_stats: if True, print tree size (node count) and mean visits per node after each
+                               iteration via tqdm.write - useful for estimating search cost on expensive
+                               world models/search configs before committing to a full benchmark run
         """
         super().__init__()
         self.world_model = None
@@ -176,6 +180,7 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
         self.trace_in_each_iter: list[list[MCTSNode]] = None
         self.root: Optional[MCTSNode] = None
         self.disable_tqdm = disable_tqdm
+        self.log_tree_stats = log_tree_stats
         self.node_visualizer = node_visualizer
         self.aggregator = aggregator
         self.node_visualizer = node_visualizer
@@ -253,6 +258,20 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
             node = node.children[self.simulate_choice(fast_rewards)]
             path.append(node)
 
+    def _tree_stats(self) -> tuple[int, float]:
+        """Walks the current tree from self.root. Returns (node_count, mean_visits_per_node),
+        where a node's visit count is len(node.cum_rewards)."""
+        node_count = 0
+        total_visits = 0
+        stack = [self.root]
+        while stack:
+            node = stack.pop()
+            node_count += 1
+            total_visits += len(node.cum_rewards)
+            if node.children:
+                stack.extend(node.children)
+        return node_count, total_visits / node_count if node_count else 0.
+
     def _back_propagate(self, path: list[MCTSNode]):
         rewards = []
         cum_reward = -math.inf
@@ -280,10 +299,14 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
         if self.output_trace_in_each_iter:
             self.trace_in_each_iter = []
 
-        for _ in trange(self.n_iters, disable=self.disable_tqdm, desc='MCTS iteration', leave=False):
+        for i in trange(self.n_iters, disable=self.disable_tqdm, desc='MCTS iteration', leave=False):
             path = self.iterate(self.root)
             if self.output_trace_in_each_iter:
                 self.trace_in_each_iter.append(deepcopy(path))
+            if self.log_tree_stats:
+                node_count, mean_visits = self._tree_stats()
+                tqdm.write(f'MCTS iteration {i + 1}/{self.n_iters}: '
+                           f'tree_nodes={node_count}, mean_visits_per_node={mean_visits:.2f}')
 
         if self.output_strategy == 'follow_max':
             self._output_iter = []
