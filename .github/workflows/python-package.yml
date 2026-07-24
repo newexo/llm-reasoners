@@ -1,0 +1,49 @@
+name: Python package
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Single version (matches pyproject.toml's python floor and the dev conda env).
+        # Not a matrix like the template: main deps include torch/transformers/bitsandbytes,
+        # multi-GB per install, so testing across several Python versions here is wasteful
+        # for a research fork that isn't broadly distributed.
+        python-version: ["3.10"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 2.4.1
+        virtualenvs-create: true
+        virtualenvs-in-project: false
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        poetry install --with dev
+
+    - name: Lint
+      run: make lint
+
+    - name: Run tests
+      run: make test
+
+    - name: Coverage check
+      run: make coverage

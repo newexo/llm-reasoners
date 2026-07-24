@@ -29,3 +29,8 @@ temp_plan
 temp_problem
 
 !autorace/data/eval_model/*.jsonl
+
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/

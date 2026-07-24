@@ -19,6 +19,6 @@ You can find the README about how to run the code under each directory with `cd 
 
 ## How to switch the base LLMs
 
-Generally, all examples should be runnable with any choices of the base models (in `reasoners/lm`), e.g., `hugginface`, `llama3`, `exllama`, `openai`, `claude`, etc. Simply change the code of model loading `base_model = ...` and it should work.
+Generally, all examples should be runnable with any choices of the base models (in `reasoners/lm`), e.g., `hugginface`, `llama3`, `openai`, `claude`, etc. Simply change the code of model loading `base_model = ...` and it should work.
 
 Note that, when you switch to a new LLM, you may need to manually set the `eos_token_id` for it, so that the generation would stop when the LLM finishes answering the question. Failing to set the `eos_token_id` properly may result in slow generation and wrong answer parsing.

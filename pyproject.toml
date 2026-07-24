@@ -1,3 +1,84 @@
+[tool.poetry]
+name = "llm-reasoners"
+version = "1.0.2"
+description = "A library for advanced reasoning methods with large language models"
+authors = ["Shibo Hao"]
+maintainers = ["Reuben Brasher <rkbrasher@gmail.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+packages = [{include = "reasoners"}]
+include = ["reasoners/**/*.md"]
+
+[tool.poetry.scripts]
+reasoners-visualizer = "reasoners.visualization:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+tqdm = "*"
+fire = "*"
+numpy = "*"
+scipy = "*"
+torch = ">=2.6.0"
+datasets = "*"
+huggingface-hub = "*"
+transformers = ">=5.3.0"
+sentencepiece = "*"
+openai = "*"
+tarski = "*"
+pddl = "0.2.0"
+peft = "*"
+optimum = "*"
+ninja = "*"
+bitsandbytes = "*"
+fairscale = "*"
+google-generativeai = "*"
+anthropic = "*"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+coverage = "*"
+ruff = "*"
+
+[tool.poetry.group.notebook]
+optional = true
+
+[tool.poetry.group.notebook.dependencies]
+jupyter = "*"
+jupyterlab = "*"
+ipykernel = "*"
+ipywidgets = "*"
+
+[tool.pytest.ini_options]
+testpaths = ["reasoners/tests"]
+
+# Scoped to code we've added/reviewed, not the inherited `reasoners/` package
+# (which has ~1877 pre-existing, untriaged findings) or the vendored submodules.
+# Expand this list as existing files get reviewed and adopted.
+[tool.ruff]
+line-length = 88
+include = ["reasoners/tests/**/*.py"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.coverage.run]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
 [build-system]
-requires = ["setuptools>=64", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

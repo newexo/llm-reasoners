@@ -7,13 +7,18 @@
    - **If you installed `llm-reasoners` with pip**: Please clone the `LLM-Planning` repo and add it to the environment variable:
    ```bash
    git clone https://github.com/karthikv792/LLMs-Planning.git
-   cd LLMs-Planning && git checkout 34e6841
+   cd LLMs-Planning && git checkout fc638a1aff7df3fe7a1a1d289fa2c04cc24dc284
    echo "export PLANBENCH_PATH=$(pwd)" >> ~/.bashrc && source ~/.bashrc
    ```
 
-2. Set up `Val` for evaluation. Ideally you can directly use the executable files from [there](https://github.com/karthikv792/LLMs-Planning/tree/34e6841f81ca7708f2f8b8241504bfe8a908e40b/planner_tools/VAL), and there is no need to build the tool yourself. If that doesn't work you could try install the tools locally following their instruction.
+2. Set up `VAL` for evaluation. Build it from the official [KCL-Planning/VAL](https://github.com/KCL-Planning/VAL) repository (the plan validator originally developed at the University of Strathclyde / King's College London, BSD-3-Clause licensed) — not the copy vendored inside `LLMs-Planning`, which carries stale/inconsistent license files and hasn't been updated since 2023:
+   ```bash
+   git clone https://github.com/KCL-Planning/VAL.git && cd VAL
+   make validate
+   ```
+   Only `validate` is needed here (`parser`/`tan` are unused by this repo).
 
-3. Assign path of the folder to the environment variable VAL `export VAL=/path/to/val`
+3. Assign the path of the directory containing the built `validate` executable to the environment variable VAL: `export VAL=/path/to/VAL`
 
 ## Data Description
 
