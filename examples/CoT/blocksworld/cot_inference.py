@@ -1,4 +1,4 @@
-from reasoners.lm import ExLlamaModel, HFModel
+from reasoners.lm import HFModel
 import json
 from reasoners.benchmark import BWEvaluator
 import fire
