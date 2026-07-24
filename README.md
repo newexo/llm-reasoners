@@ -15,6 +15,18 @@
 
 ---
 
+## About this fork
+
+This is a fork of [`maitrix-org/llm-reasoners`](https://github.com/maitrix-org/llm-reasoners), maintained
+independently by [Reuben Brasher](https://github.com/newexo) with no intention of merging changes back
+upstream. All credit for the library's design, algorithms, and research goes to the original authors —
+Shibo Hao and the Maitrix.org team — see [Citation](#citation) below. This fork exists to run and extend
+the library's experiments (currently: a GPU-enabled Docker setup for the `demo.ipynb` Blocksworld tutorial)
+on infrastructure and with dependency versions that work for that purpose; it diverges from upstream
+deliberately (see [What's different in this fork](#whats-different-in-this-fork) below).
+
+---
+
 **LLM Reasoners** is a library designed to enhance LLMs' ability to perform complex reasoning using advanced algorithms. It provides:
 
 
@@ -253,30 +265,123 @@ visualize(mcts_result, node_data_factory=blocksworld_node_data_factory,
                        edge_data_factory=blocksworld_edge_data_factory)
 ```
 Then a URL of the visualized results will pop up. The figure will be interactive and look like the examples shown on our [demo website](https://llm-reasoners.net/).
+
 ## Installation
 
-Make sure to use Python 3.10 or later.
+Two ways to work with this fork: natively (conda + Poetry — for library development, tests, and running
+individual examples) or in Docker (a GPU-enabled container purpose-built for running `demo.ipynb`). Use
+whichever matches what you're doing; they're independent of each other.
+
+### Native setup (conda + Poetry)
+
+Requires Python 3.10+ and a submodule checkout (`LLMs-Planning`, used by the Blocksworld benchmark for
+PDDL problem instances — see [What's different in this fork](#whats-different-in-this-fork) for why
+`exllama` is no longer part of this list).
 
 ```bash
-conda create -n reasoners python=3.10
-conda activate reasoners
-```
-
-### Install from `pip`
-
-```bash
-pip install llm-reasoners
-```
-
-### Install from github
-(Recommended if you want to run the examples in the github repo)
-
-```bash
-git clone https://github.com/Ber666/llm-reasoners --recursive
+git clone --recursive https://github.com/newexo/llm-reasoners.git
 cd llm-reasoners
-pip install -e .
+# or, if already cloned without --recursive:
+git submodule update --init
+
+conda create -n llm-reasoners python=3.10
+conda activate llm-reasoners
+pip install poetry
+poetry install --with dev,notebook   # add/drop groups as needed; both are optional
 ```
-Adding `--recursive` will help you clone LLM-Planning automatically. Note that some other optional modules may require other dependencies. Please refer to the error message for details.
+
+`poetry.toml` (checked into this repo) sets `virtualenvs.create = false`, so Poetry installs directly into
+whichever Python is currently active (the conda env above) instead of creating its own nested virtualenv —
+no extra step needed.
+
+### Running tests, linting, and formatting
+
+A `Makefile` wraps the usual commands (all run through Poetry):
+
+```bash
+make test           # pytest
+make lint           # ruff check
+make format         # ruff format
+make check          # format + lint + test
+make coverage        # pytest with coverage, enforces a minimum threshold
+make coverage-html   # same, plus an HTML report at htmlcov/index.html
+```
+
+Linting/coverage are currently scoped to code added in this fork (`reasoners/tests/`), not the ~1877
+pre-existing findings across the inherited codebase — see `pyproject.toml`'s `[tool.ruff]` section for the
+reasoning. GitHub Actions CI (`.github/workflows/python-package.yml`) runs `make lint`, `make test`, and
+`make coverage` on every push/PR to `main`.
+
+### Docker (GPU experiments, running notebooks)
+
+A separate, GPU-enabled Docker setup is available for running `demo.ipynb` (the CoT vs. ToT vs. RAP
+Blocksworld tutorial) without needing to configure CUDA/PyTorch/`bitsandbytes`/the PDDL plan validator by
+hand. Requires an NVIDIA GPU host with the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+configured for Docker.
+
+```bash
+git submodule update --init          # if not already done
+docker compose build
+docker compose up -d
+docker compose logs | grep token=    # grab the Jupyter Lab URL
+```
+
+Full instructions — model choices (including two ungated alternatives to the gated
+`meta-llama/Llama-3.1-8B`), the plan validator (`VAL`) setup, troubleshooting — are in
+**[RUNNING.md](RUNNING.md)**.
+
+### Installing from PyPI
+
+Upstream publishes this library to PyPI as [`llm-reasoners`](https://pypi.org/project/llm-reasoners/).
+This fork is not separately published there — `pip install llm-reasoners` installs upstream's package, not
+the changes in this repo. To use this fork's code, install from source as shown above.
+
+## What's different in this fork
+
+- **Packaging replaced**: upstream's `setup.py` pinned no dependency versions at all, which meant installs
+  could silently pick up two packages with known RCE vulnerabilities (`torch` < 2.6.0,
+  [CVE-2025-32434](https://github.com/advisories/GHSA-53q9-r3pm-6pq6); `transformers` 4.56.0–5.2.x,
+  CVE-2026-4372). Replaced with a Poetry-managed `pyproject.toml` with floor-pinned versions, plus
+  `Makefile`/CI/test scaffolding that didn't exist before.
+- **`exllama` submodule removed.** Unmaintained upstream since 2023 (superseded by `exllamav2`) and unused
+  by this fork — the primary local-inference backend here is `HFModel` + `bitsandbytes` instead.
+- **`LLMs-Planning` submodule re-pinned** to current `main` (was pinned to a 2023 commit). The plan
+  validator (`VAL`) is now built from its actual canonical upstream,
+  [`KCL-Planning/VAL`](https://github.com/KCL-Planning/VAL) (BSD-3-Clause), rather than the precompiled
+  binaries vendored inside `LLMs-Planning`, which carried stale/inconsistent license files.
+- **GPU Docker setup added** (`Dockerfile`, `docker-compose.yml`, `RUNNING.md`) for running `demo.ipynb`
+  reproducibly.
+- **Ungated model options added** to `demo.ipynb` — `Qwen/Qwen2.5-7B` and `mistralai/Mistral-7B-v0.3`
+  alongside the original, gated `meta-llama/Llama-3.1-8B`.
+
+## Experiments tried on this fork
+
+`demo.ipynb` walks through Chain-of-Thought, Tree-of-Thought (`BeamSearch`), and RAP (`MCTS`) on a single
+Blocksworld example, using progressively richer state representations — CoT/ToT have no real world model
+(state = action history only), while RAP's world model tracks the actual block configuration via an
+LLM-simulated `step()`. The original notebook demonstrates this with `Llama-2-70B-GPTQ` on 2×24GB GPUs.
+
+We reran it end-to-end inside the Docker setup above, on a single consumer GPU (RTX 3060, 12GB VRAM), using
+`Qwen/Qwen2.5-7B` (ungated, 4-bit `bitsandbytes` quantization) instead — about 1/10th the parameter count
+and no multi-GPU setup. Task: init = "orange block on top of red block", goal = "red block on top of blue
+block".
+
+| Method | Plan produced | Valid? |
+|---|---|---|
+| CoT | `pick up the orange block` → ... | ❌ invalid — orange isn't on the table (it's on red), needs `unstack` not `pick up` |
+| ToT (BeamSearch) | `pick up the red block` → ... | ❌ invalid — red isn't clear (orange is on top of it) |
+| RAP (MCTS) | `unstack orange from red` → `put down orange` → `pick up red` → `stack red on blue` | ✅ **valid** — reaches the goal exactly |
+
+RAP found the correct plan in its first MCTS iteration (~24s). The qualitative result — CoT and ToT fail
+without a real world model, RAP succeeds with one — reproduced even at 7B scale on a single 12GB GPU. This
+is one example, not a full benchmark run (the notebook's final cell runs the same comparison across the
+full 84-case dataset, which we did not run in full — see `RUNNING.md` for how to do that yourself).
+
+While debugging this run we also found and fixed two gaps in the original (pre-fork) dependency
+declaration: the `pddl` PyPI package (needed by the Blocksworld benchmark's PDDL writer) was never actually
+listed in `setup.py`, and the Docker image was missing `python3-dev`, needed at runtime by `triton`'s JIT
+compilation on first CUDA kernel dispatch. Both are now declared explicitly rather than relying on them
+happening to already be present.
 
 ## Citation
 This project is an extension of the following paper:
