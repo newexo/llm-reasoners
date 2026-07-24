@@ -80,7 +80,10 @@ class MCTSAggregation(Generic[State, Action, Example], ABC):
         self.retrieve_answer = retrieve_answer
         self.weight_policy = weight_policy
 
-    def __call__(self, tree_state: MCTSNode[State, Action,Example]) -> Optional[Hashable]:
+    def build_answer_dict(self, tree_state: MCTSNode[State, Action, Example]) -> dict[Hashable, float]:
+        """Walks the tree accumulating weighted votes per answer, keyed by weight_policy.
+        Exposed separately from __call__ so callers (e.g. MCTS's own convergence check) can
+        inspect the current vote distribution, not just the argmax answer."""
         answer_dict = defaultdict(lambda: 0)
 
         def visit(cur: MCTSNode[State, Action, Example]):
@@ -112,7 +115,10 @@ class MCTSAggregation(Generic[State, Action, Example], ABC):
             return cur_list
 
         visit(tree_state)
+        return answer_dict
 
+    def __call__(self, tree_state: MCTSNode[State, Action,Example]) -> Optional[Hashable]:
+        answer_dict = self.build_answer_dict(tree_state)
         if len(answer_dict) == 0:
             return None
         return max(answer_dict, key=lambda answer: answer_dict[answer])
@@ -131,6 +137,8 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
                  aggregator: Optional[MCTSAggregation] = None,
                  disable_tqdm: bool = True,
                  log_tree_stats: bool = False,
+                 convergence_stop_iters: Optional[int] = None,
+                 convergence_stop_share: float = 0.8,
                  node_visualizer: Callable[[MCTSNode], dict] = lambda x: x.__dict__):
         """
         MCTS algorithm
@@ -154,6 +162,14 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
         :param log_tree_stats: if True, print tree size (node count) and mean visits per node after each
                                iteration via tqdm.write - useful for estimating search cost on expensive
                                world models/search configs before committing to a full benchmark run
+        :param convergence_stop_iters: requires `aggregator` to be set. If not None, stop search() early
+                                       once the same answer has held >= convergence_stop_share of the
+                                       aggregator's weighted vote for this many consecutive iterations,
+                                       rather than always spending the full n_iters budget. No effect if
+                                       `aggregator` is None (silently ignored, same as leaving n_iters as
+                                       the only budget control).
+        :param convergence_stop_share: the vote-share threshold used by convergence_stop_iters. Ignored if
+                                       convergence_stop_iters is None.
         """
         super().__init__()
         self.world_model = None
@@ -181,6 +197,8 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
         self.root: Optional[MCTSNode] = None
         self.disable_tqdm = disable_tqdm
         self.log_tree_stats = log_tree_stats
+        self.convergence_stop_iters = convergence_stop_iters
+        self.convergence_stop_share = convergence_stop_share
         self.node_visualizer = node_visualizer
         self.aggregator = aggregator
         self.node_visualizer = node_visualizer
@@ -272,6 +290,20 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
                 stack.extend(node.children)
         return node_count, total_visits / node_count if node_count else 0.
 
+    def _leading_answer_share(self) -> Optional[tuple[Hashable, float]]:
+        """Returns (leading_answer, its share of total weighted votes) using self.aggregator's vote
+        distribution over the current tree, or None if there's no aggregator or no terminal nodes yet."""
+        if self.aggregator is None:
+            return None
+        answer_dict = self.aggregator.build_answer_dict(self.root)
+        if not answer_dict:
+            return None
+        total_weight = sum(answer_dict.values())
+        if total_weight <= 0:
+            return None
+        leading_answer, leading_weight = max(answer_dict.items(), key=lambda kv: kv[1])
+        return leading_answer, leading_weight / total_weight
+
     def _back_propagate(self, path: list[MCTSNode]):
         rewards = []
         cum_reward = -math.inf
@@ -299,6 +331,8 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
         if self.output_trace_in_each_iter:
             self.trace_in_each_iter = []
 
+        convergence_streak = 0
+        convergence_answer = None
         for i in trange(self.n_iters, disable=self.disable_tqdm, desc='MCTS iteration', leave=False):
             path = self.iterate(self.root)
             if self.output_trace_in_each_iter:
@@ -307,6 +341,20 @@ class MCTS(SearchAlgorithm, Generic[State, Action, Example]):
                 node_count, mean_visits = self._tree_stats()
                 tqdm.write(f'MCTS iteration {i + 1}/{self.n_iters}: '
                            f'tree_nodes={node_count}, mean_visits_per_node={mean_visits:.2f}')
+            if self.convergence_stop_iters is not None:
+                leading = self._leading_answer_share()
+                if leading is not None and leading[0] == convergence_answer \
+                        and leading[1] >= self.convergence_stop_share:
+                    convergence_streak += 1
+                else:
+                    convergence_streak = 1 if leading is not None else 0
+                    convergence_answer = leading[0] if leading is not None else None
+                if convergence_streak >= self.convergence_stop_iters:
+                    if self.log_tree_stats:
+                        tqdm.write(f'MCTS converged after {i + 1}/{self.n_iters} iterations: '
+                                   f'answer={convergence_answer!r} held >= {self.convergence_stop_share:.0%} '
+                                   f'for {convergence_streak} consecutive iterations - stopping early.')
+                    break
 
         if self.output_strategy == 'follow_max':
             self._output_iter = []
