@@ -1518,7 +1518,7 @@ files = [
 google-api-core = {version = ">=1.34.1,<2.0.dev0 || >=2.11.dev0,<3.0.0.dev0", extras = ["grpc"]}
 google-auth = ">=2.14.1,<2.24.0 || >2.24.0,<2.25.0 || >2.25.0,<3.0.0.dev0"
 proto-plus = [
-    {version = ">=1.22.3,<2.0.0.dev0", markers = "python_version < \"3.13\""},
+    {version = ">=1.22.3,<2.0.0.dev0"},
     {version = ">=1.25.0,<2.0.0.dev0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=3.20.2,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<6.0.0.dev0"
@@ -1576,7 +1576,7 @@ grpcio-status = [
     {version = ">=1.49.1,<2.0.0", optional = true, markers = "python_version >= \"3.11\" and extra == \"grpc\""},
 ]
 proto-plus = [
-    {version = ">=1.24.0,<2.0.0"},
+    {version = ">=1.24.0,<2.0.0", markers = "python_version < \"3.13\""},
     {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
 ]
 protobuf = ">=5.29.6,<8.0.0"
@@ -2641,6 +2641,23 @@ files = [
 [package.extras]
 atomic-cache = ["atomicwrites"]
 interegular = ["interegular (>=0.3.1,<0.4.0)"]
+nearley = ["js2py"]
+regex = ["regex"]
+
+[[package]]
+name = "lark-parser"
+version = "0.12.0"
+description = "a modern parsing library"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "lark-parser-0.12.0.tar.gz", hash = "sha256:15967db1f1214013dca65b1180745047b9be457d73da224fcda3d9dd4e96a138"},
+    {file = "lark_parser-0.12.0-py2.py3-none-any.whl", hash = "sha256:0eaf30cb5ba787fe404d73a7d6e61df97b21d5a63ac26c5008c78a494373c675"},
+]
+
+[package.extras]
+atomic-cache = ["atomicwrites"]
 nearley = ["js2py"]
 regex = ["regex"]
 
@@ -4046,6 +4063,22 @@ files = [
 [package.extras]
 qa = ["flake8 (==5.0.4)", "types-setuptools (==67.2.0.1)", "zuban (==0.5.1)"]
 testing = ["docopt", "pytest"]
+
+[[package]]
+name = "pddl"
+version = "0.2.0"
+description = "PDDL parser"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "pddl-0.2.0-py2.py3-none-any.whl", hash = "sha256:e2de3d68f56bae6f8bb870e1a465a9b4f7fe796c08e8f42ae2e6952ab90ec95e"},
+    {file = "pddl-0.2.0.tar.gz", hash = "sha256:a0a7fad823e95f31e9034183dbdd90543cd27e4d1c09629ee9759ccd7738fa81"},
+]
+
+[package.dependencies]
+click = ">=8,<9"
+lark-parser = ">=0.9.0,<1"
 
 [[package]]
 name = "peft"
@@ -6759,4 +6792,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "fb80e1585125ffda73887c0538d47f1205982f78636ebf3178ad700e7477fc4b"
+content-hash = "0581b156cb95d8491be12bdc89850307b7dca32d2d825474442ef0893fbec04b"
