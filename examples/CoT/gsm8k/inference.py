@@ -1,4 +1,3 @@
-from reasoners.lm import ExLlamaModel
 import json
 from reasoners.lm.openai_model import OpenAIModel
 from reasoners.benchmark import GSM8KEvaluator
