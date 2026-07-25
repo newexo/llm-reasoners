@@ -6,7 +6,7 @@ import prompts.output
 import prompts.transition
 from reasoners import WorldModel, LanguageModel
 from reasoners.base import Example
-from examples.prontoqa.dataset import ProntoQAExample
+from dataset import ProntoQAExample
 
 @dataclass
 class ProntoQAState:
