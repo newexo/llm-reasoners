@@ -61,17 +61,17 @@ class ProntoQAConfig(SearchConfig[ProntoQAState, ProntoQAAction,ProntoQAExample]
     ) -> tuple[float, dict]:
         *base_facts, init_state = self.example.test_example.question.split(". ")
         input_prompt = ""
-        match action:
-            case "Finish.":
-                input_prompt += prompts.finish.EXAMPLES
-                input_prompt += prompts.finish.TARGET_FORMAT.format(self.example.test_example.query)
-                input_prompt += prompts.finish.CLAIM_FORMAT.format(state)
-                input_prompt += prompts.finish.OUTPUT_PREFIX
-            case _:
-                input_prompt = prompts.valid_rap.TEMPLATE.replace("[[STATE]]", state.body)\
-                    .replace("[[ACTION]]", action)\
-                    .replace("[[QUERY]]", self.example.test_example.query)\
-                    .replace("[[FACTS]]", ". ".join(base_facts) + ".")
+        # see world_model.py's step() for why this is startswith, not an exact match
+        if action.strip().startswith("Finish."):
+            input_prompt += prompts.finish.EXAMPLES
+            input_prompt += prompts.finish.TARGET_FORMAT.format(self.example.test_example.query)
+            input_prompt += prompts.finish.CLAIM_FORMAT.format(state)
+            input_prompt += prompts.finish.OUTPUT_PREFIX
+        else:
+            input_prompt = prompts.valid_rap.TEMPLATE.replace("[[STATE]]", state.body)\
+                .replace("[[ACTION]]", action)\
+                .replace("[[QUERY]]", self.example.test_example.query)\
+                .replace("[[FACTS]]", ". ".join(base_facts) + ".")
 
         output_logits = self.base_model.get_next_token_logits(
             input_prompt,
@@ -95,11 +95,10 @@ class ProntoQAConfig(SearchConfig[ProntoQAState, ProntoQAAction,ProntoQAExample]
         outputs = input_prompt + " " + action
         intuition = self.base_model.get_loglikelihood(input_prompt, [outputs])[0]
 
-        match action:
-            case "Finish.":
-                print(f"S[{state}] Q[{self.example.test_example.query}] -> Self-eval[{self_eval}] Intuition[{intuition}]", flush=True)
-            case _:
-                print(f"S[{state.last_state}] A[{action}] S'[{state}] -> Self-eval[{self_eval}] Intuition[{intuition}]", flush=True)
+        if action.strip().startswith("Finish."):
+            print(f"S[{state}] Q[{self.example.test_example.query}] -> Self-eval[{self_eval}] Intuition[{intuition}]", flush=True)
+        else:
+            print(f"S[{state.last_state}] A[{action}] S'[{state}] -> Self-eval[{self_eval}] Intuition[{intuition}]", flush=True)
 
         return intuition + self_eval, {"self-eval": self_eval, "intuition": intuition}
 
