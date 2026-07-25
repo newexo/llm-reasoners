@@ -1,4 +1,6 @@
+import os
 import pickle
+import sys
 from typing import Type, Optional, Literal
 
 import numpy as np
@@ -85,8 +87,6 @@ def rap_game24(base_model: LanguageModel,
 
 
 if __name__ == '__main__':
-    import os
-    import sys
     import json
     import warnings
     import fire
