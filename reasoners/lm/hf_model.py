@@ -248,7 +248,7 @@ class HFModel(LanguageModel):
 
         logits = []
         for case_logits, cand in zip(all_logits, cand_tokens):
-            logits.append(case_logits[cand].cpu().numpy())
+            logits.append(case_logits[cand].float().cpu().numpy())
         return logits
     
     @torch.no_grad()
