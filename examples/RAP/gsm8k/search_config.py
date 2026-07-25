@@ -63,7 +63,7 @@ class GSM8kConfig(SearchConfig):
             print(self.example)
             # self.overall_question = re.match('.*((Calculate|calculate|how|How|what|What|Find|find|True or false).*)$',
             #                                  self.example, flags=re.DOTALL)[1]
-            self.overall_question = re.match('.*((([A-Z].* (calculate|how|what|find|true or false))|((Calculate|How|What|Find|True or false))).*)$', self.example, flags=re.DOTALL)[1]
+            self.overall_question = re.match('.*((([A-Z].*\s(calculate|how|what|find|true or false))|((Calculate|How|What|Find|True or false))).*)$', self.example, flags=re.DOTALL)[1]
 
     def get_actions(self, state: GSM8kState, ) -> list[GSM8kAction]:
         with io.StringIO() as f:
