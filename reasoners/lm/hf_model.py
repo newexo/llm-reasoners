@@ -99,6 +99,7 @@ class HFModel(LanguageModel):
         self.max_batch_size = max_batch_size
         self.max_length = max_length
         self.device = device
+        self._stop_string_token_ids_cache = {}
         # self.model = BetterTransformer.transform(self.model) #not updated yet
         self.model.eval()
         # for old llama tokenizer's config, below is necessary
@@ -107,6 +108,25 @@ class HFModel(LanguageModel):
         self.model.config.eos_token_id = 2
         # if torch.__version__ >= "2" and sys.platform != "win32":#need to figure out this line
         #     self.model = torch.compile(self.model) ###make the faketensor bug, an on-going issue in pytorch
+
+    def _stop_string_token_ids(self, stop_string: str) -> list[int]:
+        """Every vocab token id whose decoded text ends with stop_string, not just the token id
+        for stop_string encoded on its own. BPE tokenizers often merge a stop string like '\\n'
+        into a single token together with whatever precedes it in context (e.g. Qwen2 merges
+        '.' + '\\n' into one '.\\n' token) - watching only for the standalone encoding lets
+        generation run past the intended stop point whenever that merge happens. Cached per
+        stop_string since scanning the vocab (~0.3s for a 150k-token vocab) is only needed once.
+        """
+        if stop_string not in self._stop_string_token_ids_cache:
+            matches = [i for i in range(len(self.tokenizer)) if self.tokenizer.decode([i]).endswith(stop_string)]
+            if not matches:
+                tokenized = self.tokenizer.encode(stop_string, add_special_tokens=False)
+                warnings.warn(f'no vocab token decodes to text ending with {stop_string!r}; '
+                              f'falling back to {tokenized[-1]} (the standalone encoding)')
+                matches = [tokenized[-1]]
+            self._stop_string_token_ids_cache[stop_string] = matches
+        return self._stop_string_token_ids_cache[stop_string]
+
     def generate(
             self,
             inputs: list[str],
@@ -141,11 +161,8 @@ class HFModel(LanguageModel):
                 eos_token_id_input = [eos_token_id_input]
             for token in eos_token_id_input:
                 if isinstance(token, str):
-                    tokenized = self.tokenizer.encode(token, add_special_tokens=False)
-                    if len(tokenized) != 1:
-                        warnings.warn(f'the eos_token {repr(token)} is encoded into {tokenized} with length != 1, '
-                                    f'using {tokenized[-1]} as the eos_token_id')
-                    token = tokenized[-1]
+                    eos_token_id.extend(self._stop_string_token_ids(token))
+                    continue
                 if isinstance(token, int):
                     eos_token_id.append(token)
                 else:
