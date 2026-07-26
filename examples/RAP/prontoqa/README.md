@@ -1,3 +1,28 @@
+## Model choice matters a lot here
+
+Base-model choice has a large effect on this example's search behavior, well beyond ordinary
+capability differences. In a same-harness, same-seed-budget sweep (10 cases, `n_iters=20`,
+`depth_limit=6`, after the `next_step.py` prompt-accumulation fix in
+[#6](https://github.com/newexo/llm-reasoners/pull/6)):
+
+| Model | Terminal ("Finish.") reached | Accuracy | Entity contamination |
+|---|---|---|---|
+| Mistral-7B-v0.1 / v0.3 | 10/10 | 60% | none |
+| Llama-2-7B | 10/10 | 30% | none |
+| Qwen1.5-7B | 10/10 | 30% | mild |
+| Llama-3.1-8B | 9/10 | 30% | mild |
+| Qwen2.5-7B-Instruct | 8/10 | 40% | none |
+| Qwen2.5-7B (base) | 7/10 | 10% | severe |
+| Phi-2 (2.7B) | 5/10 | 10% | none |
+
+"Entity contamination" is the derived reasoning chain drifting onto an unrelated entity from a
+few-shot demonstration instead of the actual test question's subject (e.g. a question about "Rex"
+producing an answer about "Stella" or "127"). It shows up to varying degrees in Qwen (both
+generations) and Llama-3.1, but not at all in Mistral (either version) or Phi-2 — so it isn't a
+general small/old-base-model trait, and newer generations aren't uniformly better: Qwen2.5-base is
+*worse* than Qwen1.5-base on this specific task. If you're picking a base model for this example,
+Mistral-7B is the best-validated choice.
+
 ## Run
 An example for exllama
 ```bash
