@@ -25,6 +25,39 @@ def format_examples(sampled_data):
     return formatted_examples
 
 
+def _state_chain(state: ProntoQAState) -> list:
+    """Walk `last_state` back to the initial state, returning states oldest-first."""
+    chain = []
+    cur = state
+    while cur is not None:
+        chain.append(cur)
+        cur = cur.last_state
+    chain.reverse()
+    return chain
+
+
+def build_next_step_query(sampled_data, base_facts, query, state: ProntoQAState) -> str:
+    # Mirrors format_examples()'s accumulated "Claim i.1...Next i.1...Claim i.j" shape
+    # for the live query too. Previously this only ever rendered a bare "Claim N.1:
+    # {state}" regardless of true search depth - the few-shot demos only ever show
+    # "Finish." at the highest sub-step index, never at ".1", so a live query always
+    # presented as ".1" could never pattern-match to it.
+    problem_idx = len(sampled_data) + 1
+    chain = _state_chain(state)
+
+    input_prompt = format_examples(sampled_data)
+    input_prompt += prompts.next_step.FACTS_FORMAT.format(problem_idx, ". ".join(base_facts))
+    input_prompt += prompts.next_step.QUERY_FORMAT.format(problem_idx, query)
+    for step_idx in range(len(chain) - 1):
+        j = step_idx + 1
+        input_prompt += prompts.next_step.CLAIM_FORMAT.format(problem_idx, j, chain[step_idx].body)
+        input_prompt += f"Next {problem_idx}.{j}: {chain[step_idx + 1].last_action}\n"
+    k = len(chain)
+    input_prompt += prompts.next_step.CLAIM_FORMAT.format(problem_idx, k, chain[-1].body)
+    input_prompt += prompts.next_step.NEXT_STEP_PREFIX.format(problem_idx, k)
+    return input_prompt
+
+
 class ProntoQAConfig(SearchConfig[ProntoQAState, ProntoQAAction,ProntoQAExample]):
 
     def __init__(self, base_model: LanguageModel, temperature=0.8, n_candidates=4):
@@ -35,15 +68,10 @@ class ProntoQAConfig(SearchConfig[ProntoQAState, ProntoQAAction,ProntoQAExample]
         self.example: ProntoQAExample = self.example
 
     def get_actions(self, state: ProntoQAState) -> list[ProntoQAAction]:
-        
+
         *base_facts, init_state = self.example.test_example.question.split(". ")
 
-        input_prompt = ""
-        input_prompt += format_examples(self.prompt)
-        input_prompt += prompts.next_step.FACTS_FORMAT.format(len(self.prompt) + 1,". ".join(base_facts))
-        input_prompt += prompts.next_step.QUERY_FORMAT.format(len(self.prompt) + 1, self.example.test_example.query)
-        input_prompt += prompts.next_step.CLAIM_FORMAT.format(len(self.prompt) + 1, state)
-        input_prompt += prompts.next_step.NEXT_STEP_PREFIX.format(len(self.prompt) + 1)
+        input_prompt = build_next_step_query(self.prompt, base_facts, self.example.test_example.query, state)
 
         # print(f"input_prompt: {input_prompt}")
         outputs = self.base_model.generate([input_prompt] * self.n_candidates, eos_token_id="\n", hide_input=True, temperature=self.temperature, do_sample=True).text
@@ -85,13 +113,7 @@ class ProntoQAConfig(SearchConfig[ProntoQAState, ProntoQAAction,ProntoQAExample]
 
         *base_facts, init_state = self.example.test_example.question.split(". ")
 
-        input_prompt = ""
-        # input_prompt += prompts.next_step.EXAMPLES
-        input_prompt += format_examples(self.prompt)
-        input_prompt += prompts.next_step.FACTS_FORMAT.format(len(self.prompt) + 1,". ".join(base_facts))
-        input_prompt += prompts.next_step.QUERY_FORMAT.format(len(self.prompt) + 1, self.example.test_example.query)
-        input_prompt += prompts.next_step.CLAIM_FORMAT.format(len(self.prompt) + 1, state)
-        input_prompt += prompts.next_step.NEXT_STEP_PREFIX.format(len(self.prompt) + 1)
+        input_prompt = build_next_step_query(self.prompt, base_facts, self.example.test_example.query, state)
         outputs = input_prompt + " " + action
         intuition = self.base_model.get_loglikelihood(input_prompt, [outputs])[0]
 
