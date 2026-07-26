@@ -39,6 +39,18 @@ jobs:
         python -m pip install --upgrade pip
         poetry install --with dev
 
+    # Only reasoners/benchmark/gsm8k.py hits the network (datasets.load_dataset), everything
+    # else in benchmark/ reads local file paths. Cache keyed on poetry.lock so it invalidates
+    # if the datasets library version changes; restore-keys fall back to the last cache on a
+    # miss instead of a fully cold download.
+    - name: Cache HuggingFace datasets
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/huggingface/datasets
+        key: hf-datasets-${{ runner.os }}-${{ hashFiles('poetry.lock') }}
+        restore-keys: |
+          hf-datasets-${{ runner.os }}-
+
     - name: Lint
       run: make lint
 
