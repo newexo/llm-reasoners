@@ -3,8 +3,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "examples" / "RAP" / "prontoqa"))
 
-from search_config import build_next_step_query  # noqa: E402
-from world_model import ProntoQAState  # noqa: E402
+from search_config import build_next_step_query
+from world_model import ProntoQAState
 
 
 def _chain_of(*bodies_and_actions):
