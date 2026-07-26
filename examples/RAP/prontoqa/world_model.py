@@ -6,7 +6,7 @@ import prompts.output
 import prompts.transition
 from reasoners import WorldModel, LanguageModel
 from reasoners.base import Example
-from examples.prontoqa.dataset import ProntoQAExample
+from dataset import ProntoQAExample
 
 @dataclass
 class ProntoQAState:
@@ -37,19 +37,21 @@ class ProntoQAWorldModel(WorldModel[ProntoQAState, ProntoQAAction, ProntoQAExamp
 
         input_prompt = ""
 
-        match action:
-            case "Finish.":  # transition to terminal state
-                input_prompt += prompts.output.EXAMPLES
-                input_prompt += prompts.output.QUERY_FORMAT.format(self.example.test_example.query)
-                input_prompt += prompts.output.CLAIM_FORMAT.format(state)
-                input_prompt += prompts.output.OUTPUT_PREFIX
-                print("Reached terminal state.")
+        # Real generations often trail "Finish." with extra punctuation/rambling
+        # ("Finish.!!!!", "Finish. Given the facts..."), so an exact-match "Finish."
+        # check never fires against real model output - use startswith instead.
+        if action.strip().startswith("Finish."):  # transition to terminal state
+            input_prompt += prompts.output.EXAMPLES
+            input_prompt += prompts.output.QUERY_FORMAT.format(self.example.test_example.query)
+            input_prompt += prompts.output.CLAIM_FORMAT.format(state)
+            input_prompt += prompts.output.OUTPUT_PREFIX
+            print("Reached terminal state.")
 
-            case _:  # transition to non-terminal state
-                input_prompt += prompts.transition.EXAMPLES
-                input_prompt += prompts.transition.FACTS_FORMAT.format(state, action)
-                input_prompt += prompts.transition.NEXT_CLAIM_PREFIX
-                print("Reached non-terminal state.")
+        else:  # transition to non-terminal state
+            input_prompt += prompts.transition.EXAMPLES
+            input_prompt += prompts.transition.FACTS_FORMAT.format(state, action)
+            input_prompt += prompts.transition.NEXT_CLAIM_PREFIX
+            print("Reached non-terminal state.")
 
         output = self.base_model.generate([input_prompt], eos_token_id="\n", hide_input=True, temperature=0).text[
             0].strip()
@@ -60,4 +62,4 @@ class ProntoQAWorldModel(WorldModel[ProntoQAState, ProntoQAAction, ProntoQAExamp
 
     def is_terminal(self, state: ProntoQAState) -> bool:
 
-        return state.last_action == "Finish."
+        return state.last_action is not None and state.last_action.strip().startswith("Finish.")

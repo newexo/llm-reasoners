@@ -5,7 +5,7 @@ import json
 import transformers
 
 from dataset import ProntoQADataset
-from reasoners.lm import ExLlamaModel, HFModel, BardCompletionModel, OpenAIModel, ClaudeModel, Llama2Model, Llama3Model
+from reasoners.lm import HFModel, BardCompletionModel, OpenAIModel, ClaudeModel, Llama2Model, Llama3Model
 from reasoners.algorithm import MCTS
 from reasoners.benchmark import ProntoQAEvaluatorFinal
 
@@ -58,8 +58,8 @@ def main(base_model='exllama', model_dir=None, temperature=0.0, log_dir="name", 
 
     import torch, os
     import numpy as np
-    from reasoners.lm import ExLlamaModel
     if base_model == 'exllama' and model_dir is None:
+        from reasoners.lm import ExLlamaModel
         print("Using Llama-2 70B by default")
         language_model = ExLlamaModel(os.environ['LLAMA2_CKPTS'],
                                     None, 
