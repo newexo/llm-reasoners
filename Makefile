@@ -5,9 +5,13 @@ PACKAGE := reasoners
 # Low for now: the test suite is a single import smoke test. Raise this as real tests are added.
 COVERAGE_FAIL = 1
 
-# Run the test suite
+# Run the test suite (excludes functional tests - see `test-functional`)
 test:
-	poetry run pytest
+	poetry run pytest -m "not functional"
+
+# Run functional tests: exercise a real LM, need GPU/network, not run in CI
+test-functional:
+	poetry run pytest -m functional
 
 # Format the code using Ruff
 format:
@@ -23,12 +27,12 @@ check: format lint test
 # Run tests with coverage enforcement (terminal output only)
 # Omit patterns are configured in pyproject.toml [tool.coverage.run].
 coverage:
-	poetry run coverage run --source=$(PACKAGE) -m pytest
+	poetry run coverage run --source=$(PACKAGE) -m pytest -m "not functional"
 	poetry run coverage report --fail-under=$(COVERAGE_FAIL)
 
 # Run tests with coverage and produce an HTML report
 coverage-html:
-	poetry run coverage run --source=$(PACKAGE) -m pytest
+	poetry run coverage run --source=$(PACKAGE) -m pytest -m "not functional"
 	poetry run coverage report --fail-under=$(COVERAGE_FAIL)
 	poetry run coverage html
 	@echo "HTML coverage report generated at htmlcov/index.html"
