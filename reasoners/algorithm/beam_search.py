@@ -96,9 +96,18 @@ class BeamSearch(SearchAlgorithm, Generic[State, Action]):
 
     def _post_initialization(self):
         # if the temperature is set to 0, then we force the sampling strategy to be argmax
-        if self.temperature and self.temperature < 1e-4:
+        # (temperature=0.0 is falsy in Python, so `self.temperature and ...` used to skip this
+        # guard for exactly 0 while still catching e.g. 0.00001 - fixed to check for None instead)
+        if self.temperature is not None and self.temperature < 1e-4:
             self.sampling_strategy = 'argmax'
             warnings.warn(f"Temperature is set to 0, sampling strategy is forced to be argmax.")
+
+        # stochastic sampling needs a temperature to be well-defined; softmax() would otherwise
+        # divide by None the first time it's actually called, far from this constructor
+        if self.sampling_strategy == 'stochastic' and self.temperature is None:
+            self.sampling_strategy = 'argmax'
+            warnings.warn("Stochastic sampling requires a temperature, but none was given; "
+                          "sampling strategy is forced to be argmax.")
 
         # argmax = greedy = deterministic = topk
         if self.sampling_strategy in ['greedy', 'deterministic', 'topk']:
