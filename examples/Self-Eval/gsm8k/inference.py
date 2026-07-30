@@ -10,7 +10,7 @@ from datetime import datetime
 
 from reasoners import LanguageModel, Reasoner, SearchAlgorithm
 from reasoners.algorithm import BeamSearch
-from reasoners.lm import OpenAIModel , Llama2Model, Llama3Model
+from reasoners.lm import OpenAIModel
 
 
 from world_model import GSM8kWorldModel
@@ -144,12 +144,6 @@ def main(base_lm: str = 'codex',
 
     if base_lm == 'codex':
         base_model = OpenAIModel('code-davinci-002')
-    elif base_lm == 'llama2':
-        base_model = Llama2Model(llama_path, llama_size, max_batch_size=batch_size)
-        raise SystemExit("Non't support yet")
-    elif base_lm == 'llama3':
-        base_model = Llama3Model(llama_path, llama_size, max_batch_size=batch_size)
-        raise SystemExit("Non't support yet")
     else:
         raise NotImplementedError(f'base_lm={base_lm} is not implemented')
     

@@ -7,7 +7,7 @@ from reasoners import SearchConfig, LanguageModel
 from world_model import CrosswordsState, CrosswordsAction
 from utils import *
 from prompts.crosswords import * 
-from reasoners.lm import OpenAIModel, Llama2Model, Llama3Model
+from reasoners.lm import OpenAIModel
 
 class CrosswordsConfig(SearchConfig):
     def __init__(self,
@@ -65,10 +65,6 @@ class CrosswordsConfig(SearchConfig):
 
         if isinstance(self.base_model, OpenAIModel):
             eos_token_id = []
-        elif isinstance(self.base_model, Llama2Model):
-            eos_token_id = ["\n"]
-        elif isinstance(self.base_model, Llama3Model):
-            eos_token_id = ["\n\n", ".\n", ".\n\n","\n"]
         responses = self.base_model.generate([self.prompt_wrap(obs)], #+"Make sure using the format 'h1. apple (medium)' in answer."
                                             num_return_sequences=self.n_eval,
                                             stop=None,

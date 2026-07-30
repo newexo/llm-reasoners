@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import fire
-from reasoners.lm import LlamaCppModel, LlamaModel, ExLlamaModel, HFModel, Llama3Model, Llama2Model
+from reasoners.lm import HFModel
 import random
 from typing import Literal
 import torch
@@ -12,7 +12,7 @@ from utils import extract_final_answer, eval_output
 from reasoners.lm.openai_model import OpenAIModel
 
 
-def main(base_lm: Literal['llama', 'llama.cpp', 'llama2', 'hf', 'exllama', 'openai'] = 'hf',
+def main(base_lm: Literal['hf', 'openai'] = 'hf',
             llama_ckpt: str = None,
             llama_2_ckpt: str = None,
             model_dir: str = None,
@@ -35,18 +35,7 @@ def main(base_lm: Literal['llama', 'llama.cpp', 'llama2', 'hf', 'exllama', 'open
     # set base_lm = 'llama' and llama_ckpt = '13B/30B/65B' to use llama with torchscale
     # else set base_lm = 'llama.cpp' and llama_cpp_path = the checkpoint to use llama.cpp
 
-    if base_lm == 'llama':
-        base_model = LlamaModel(llama_ckpt, llama_size, max_batch_size=batch_size, max_seq_len=max_seq_len)
-    elif base_lm == 'llama.cpp':
-        base_model = LlamaCppModel(llama_cpp_path)
-    elif base_lm == 'llama2':
-        base_model = Llama2Model(llama_2_ckpt, llama_size, max_batch_size=batch_size)
-    elif base_lm == 'llama3':
-        base_model = Llama3Model(model_dir, llama_size, max_batch_size=batch_size, max_seq_len=max_seq_len)
-    elif base_lm == 'exllama':
-        device = torch.device("cuda:0")
-        ExLlamaModel(model_dir, lora_dir,mem_map=mem_map, max_batch_size=batch_size, max_new_tokens=500, max_seq_length=2048)
-    elif base_lm == 'hf':
+    if base_lm == 'hf':
         base_model = HFModel(model_dir, model_dir,quantized=quantized)
     elif base_lm == 'openai':
         base_model = OpenAIModel("gpt-4-1106-preview", additional_prompt="ANSWER")
@@ -100,10 +89,6 @@ def main(base_lm: Literal['llama', 'llama.cpp', 'llama2', 'hf', 'exllama', 'open
         eos_token_id = [108,109]
     elif isinstance(base_model.model, transformers.MistralForCausalLM) or isinstance(base_model.model, transformers.MixtralForCausalLM):
         eos_token_id = [13]
-    elif isinstance(base_model, Llama2Model):
-        eos_token_id = [13]
-    elif isinstance(base_model, Llama3Model):
-        eos_token_id = ["\n", ".\n", ".\n\n"]
     elif base_model.model.config.architectures[0] == 'InternLM2ForCausalLM':
         eos_token_id = [364,402,512,756]
     elif base_model.model.config.architectures[0] == 'Qwen2ForCausalLM':

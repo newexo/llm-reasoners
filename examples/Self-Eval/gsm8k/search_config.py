@@ -4,7 +4,7 @@ from prompt import code_prompt
 from world_model import GSM8kState, GSM8kAction
 from reasoners import SearchConfig, LanguageModel
 from typing import Tuple
-from reasoners.lm import OpenAIModel, Llama2Model, Llama3Model
+from reasoners.lm import OpenAIModel
 
 class GSM8kConfig(SearchConfig):
     def __init__(self,
@@ -37,11 +37,7 @@ class GSM8kConfig(SearchConfig):
         # let's prompt
         if isinstance(self.base_model, OpenAIModel):
             eos_token_id = []
-        elif isinstance(self.base_model, Llama2Model):
-            eos_token_id = ["\n"]
-        elif isinstance(self.base_model, Llama3Model):
-            eos_token_id = ["\n\n", ".\n", ".\n\n","\n"]
-            
+
         outputs = self.base_model.generate(model_input,
                                     temperature=self.temperature,
                                     max_tokens=256,

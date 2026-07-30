@@ -107,7 +107,7 @@ class ProntoQAToTSearchConfig(SearchConfig[ProntoQAState, ProntoQAAction, Pronto
 
 def main(
            model_dir: str,
-           base_lm: Literal[ 'llama2',' exllama', 'llama3']  = 'exllama',
+           base_lm: Literal['hf'] = 'hf',
            llama_size = "7B",
            batch_size = 4,
            search_algo: str = "beam",
@@ -153,29 +153,7 @@ def main(
             print("Error in output extraction,", e)
             return ""
 
-    if base_lm in ['llama2', 'llama3']:
-        np.random.seed(0)
-        random.seed(0)
-        torch.manual_seed(0)
-        torch.cuda.manual_seed(0)
-        torch.backends.cudnn.deterministic = True
-
-    if base_lm == 'llama2':
-        from reasoners.lm import Llama2Model
-        base_model = Llama2Model(model_dir, llama_size, max_batch_size=batch_size)
-    elif base_lm == 'llama3':
-        from reasoners.lm import Llama3Model
-        base_model = Llama3Model(model_dir, llama_size, max_batch_size=batch_size)
-    elif base_lm == 'exllama':
-        from reasoners.lm import ExLlamaModel  # Maybe other transformer models also support
-        base_model = ExLlamaModel(model_dir, 
-                                lora_dir=None, 
-                                device=torch.device("cuda:0"), 
-                                max_batch_size=1, 
-                                max_new_tokens=200, 
-                                max_seq_length=2048, 
-                                mem_map=mem_map)
-    elif base_lm == "hf":
+    if base_lm == "hf":
         from reasoners.lm import HFModel
         base_model = HFModel(model_dir, model_dir)
     else:

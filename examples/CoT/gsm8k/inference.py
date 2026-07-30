@@ -2,7 +2,6 @@ import json
 from reasoners.lm.openai_model import OpenAIModel
 from reasoners.benchmark import GSM8KEvaluator
 from reasoners.lm.hf_model import HFModel
-from reasoners.lm import  Llama2Model, Llama3Model
 import utils
 from typing import Literal
 import fire
@@ -31,10 +30,6 @@ class CoTReasoner():
             eos_token_id = [108]
         elif isinstance(self.base_model.model, transformers.MistralForCausalLM) or isinstance(self.base_model.model, transformers.MixtralForCausalLM):
             eos_token_id = [13]
-        elif isinstance(self.base_model, Llama2Model):
-            eos_token_id = [13]
-        elif isinstance(self.base_model, Llama3Model):
-            eos_token_id = ["\n\n", ".\n", "\n", ".\n\n"]
         elif self.base_model.model.config.architectures[0] == 'InternLM2ForCausalLM':
             eos_token_id = [364,402,512,756]
         elif self.base_model.model.config.architectures[0] == 'Qwen2ForCausalLM':
@@ -52,16 +47,12 @@ class CoTReasoner():
         outputs= [o.strip() if o.strip().endswith(".") else o.strip() + "." for o in outputs]
         print(outputs)
         return outputs
-def main(base_lm:Literal['hf', 'openai','exllama',"llama2"],model_dir, lora_dir=None, mem_map=None, batch_size=1, prompt="examples/CoT/gsm8k/prompts/cot.json", resume=0, log_dir=None, temperature=0, n_sc=1, quantized='int8',llama_size=None):
+def main(base_lm:Literal['hf', 'openai','exllama'],model_dir, lora_dir=None, mem_map=None, batch_size=1, prompt="examples/CoT/gsm8k/prompts/cot.json", resume=0, log_dir=None, temperature=0, n_sc=1, quantized='int8',llama_size=None):
 
     if base_lm == "openai":
         base_model = OpenAIModel("gpt-4-1106-preview", additional_prompt="ANSWER")
     elif base_lm == "hf":
         base_model = HFModel(model_dir, model_dir, quantized=quantized)
-    elif base_lm == 'llama2':
-        base_model = Llama2Model(model_dir, llama_size, max_batch_size=batch_size)
-    elif base_lm == 'llama3':
-        base_model = Llama3Model(model_dir, llama_size, max_batch_size=batch_size)
     else:
         raise ValueError(f"Unknown base_lm: {base_lm}")
     with open(prompt) as f:

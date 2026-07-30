@@ -19,28 +19,19 @@ def create_directory_if_not_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def main(base_model:str= "llama2",
-           model_dir: str=  os.environ.get("LLAMA2_CKPTS", None) ,
-           llama_size: str= "7B",
+def main(base_model:str= "hf",
+           model_dir: str = None,
            batch_size: int= 1,
-           mem_map: str = "[16, 22]",
+           quantized: str = "nf4",
+           max_new_tokens: int = 512,
            temperature: float = 0.8,
            n_candidates: int = 4,
            **search_algo_params):
     import numpy as np
-    from reasoners.lm import ExLlamaModel , Llama2Model, Llama3Model
-    if base_model == "llama2":
-        language_model = Llama2Model(model_dir, llama_size, max_batch_size=batch_size)
-    elif base_model == "llama3":
-        language_model = Llama3Model(model_dir, llama_size, max_batch_size=batch_size)
-    elif base_model == "exllama":
-        language_model = ExLlamaModel(model_dir,
-                                    lora_dir=None, 
-                                    max_batch_size=1, 
-                                    max_new_tokens=200, 
-                                    max_seq_length=2048, 
-                                    mem_map=mem_map,
-                                    log_output=True)#please set mem_map if you need model parallelism, e.g. mem_map = [16,22] with 2 GPUs
+    from reasoners.lm import HFModel
+    if base_model == "hf":
+        language_model = HFModel(model_dir, model_dir, max_batch_size=batch_size,
+                                  max_new_tokens=max_new_tokens, quantized=quantized)
     else:
         raise ValueError
 
