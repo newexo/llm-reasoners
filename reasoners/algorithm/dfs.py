@@ -90,6 +90,8 @@ class DFS(SearchAlgorithm, Generic[State, Action]):
         init_node = DFSNode(state=init_state, action=None, parent=None, fast_reward=0., fast_reward_details=None, is_terminal=False)
         self.dfs(world, config, init_node)
         sorted_terminals = sorted(self.terminals, key=lambda x: sum(x.cum_rewards), reverse=True)
+        if len(sorted_terminals) == 0:
+            return DFSResult(terminal_state=None, cum_rewards=[], tree_state=init_node, terminal_nodes=[])
         result = DFSResult(terminal_state=sorted_terminals[0].state, cum_rewards=sorted_terminals[0].cum_rewards, tree_state=init_node, terminal_nodes=sorted_terminals)
         return result
 
