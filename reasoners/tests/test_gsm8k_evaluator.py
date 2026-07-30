@@ -82,12 +82,9 @@ def test_sample_prompt_rap_preserves_pairing_after_sampling():
     assert init_prompt["interactive_examples"] == ["a0", "a1", "a2", "a3"]
 
 
-def test_sample_prompt_grace_returns_none():
-    evaluator = _bare_evaluator(sample_prompt_type="grace")
-    assert evaluator.sample_prompt() is None
-
-
 def test_sample_prompt_unknown_type_raises():
+    # also covers the now-removed "grace" branch - GRACE (examples/Grace) was its
+    # only caller and has been removed, so it falls through to this same error
     evaluator = _bare_evaluator(sample_prompt_type="not-a-real-type")
     with pytest.raises(NotImplementedError):
         evaluator.sample_prompt()
