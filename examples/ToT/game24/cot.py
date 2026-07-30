@@ -96,12 +96,6 @@ if __name__ == '__main__':
         elif base_lm == 'openai':
             from reasoners.lm import OpenAIModel
             base_model = OpenAIModel(openai_mode)
-        elif base_lm == 'gemini':
-            from reasoners.lm import BardCompletionModel
-            base_model = BardCompletionModel('gemini-pro')
-        elif base_lm == 'claude':
-            from reasoners.lm import ClaudeModel
-            base_model = ClaudeModel('claude-3-opus-20240229')
         else:
             assert False, f'cannot resolve {base_lm=}'
         cot_game24(base_model=base_model, disable_log=disable_log or local_rank > 0, kwargs=kwargs)

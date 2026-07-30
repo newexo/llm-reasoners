@@ -2,7 +2,7 @@ import os
 import sys
 import json
 import fire
-from reasoners.lm import LlamaCppModel, LlamaModel, ExLlamaModel, HFModel, ClaudeModel, Llama3Model, Llama2Model
+from reasoners.lm import LlamaCppModel, LlamaModel, ExLlamaModel, HFModel, Llama3Model, Llama2Model
 import random
 from typing import Literal
 import torch
@@ -10,10 +10,9 @@ import torch.backends.cudnn
 from tqdm import tqdm
 from utils import extract_final_answer, eval_output
 from reasoners.lm.openai_model import OpenAIModel
-from reasoners.lm.gemini_model import BardCompletionModel
 
 
-def main(base_lm: Literal['llama', 'llama.cpp', 'llama2', 'hf', 'exllama','openai','google','anthropic'] = 'hf',
+def main(base_lm: Literal['llama', 'llama.cpp', 'llama2', 'hf', 'exllama', 'openai'] = 'hf',
             llama_ckpt: str = None,
             llama_2_ckpt: str = None,
             model_dir: str = None,
@@ -51,10 +50,6 @@ def main(base_lm: Literal['llama', 'llama.cpp', 'llama2', 'hf', 'exllama','opena
         base_model = HFModel(model_dir, model_dir,quantized=quantized)
     elif base_lm == 'openai':
         base_model = OpenAIModel("gpt-4-1106-preview", additional_prompt="ANSWER")
-    elif base_lm == 'google':
-        base_model = BardCompletionModel("gemini-pro", additional_prompt="ANSWER")
-    elif base_lm == 'anthropic':
-        base_model = ClaudeModel("claude-3-opus-20240229", additional_prompt="ANSWER")
     from datetime import datetime
     log_dir =  f'logs/strategyqa_'\
                         f'cot/'\
@@ -99,7 +94,7 @@ def main(base_lm: Literal['llama', 'llama.cpp', 'llama2', 'hf', 'exllama','opena
     import transformers
     import pickle
     print("----------------")
-    if isinstance(base_model, OpenAIModel) or isinstance(base_model, BardCompletionModel) or isinstance(base_model, ClaudeModel):
+    if isinstance(base_model, OpenAIModel):
         eos_token_id = []
     elif isinstance(base_model.model, transformers.GemmaForCausalLM):
         eos_token_id = [108,109]

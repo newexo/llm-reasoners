@@ -2,8 +2,6 @@ import json
 from reasoners.lm.openai_model import OpenAIModel
 from reasoners.benchmark import GSM8KEvaluator
 from reasoners.lm.hf_model import HFModel
-from reasoners.lm.gemini_model import BardCompletionModel
-from reasoners.lm.anthropic_model import ClaudeModel
 from reasoners.lm import  Llama2Model, Llama3Model
 import utils
 from typing import Literal
@@ -27,7 +25,7 @@ class CoTReasoner():
             print("Using greedy decoding with HF model. Set do_sample=False")
             self.temperature == 1.0
             do_sample = False
-        if isinstance(self.base_model, OpenAIModel) or isinstance(self.base_model, BardCompletionModel) or isinstance(self.base_model, ClaudeModel):
+        if isinstance(self.base_model, OpenAIModel):
             eos_token_id = []
         elif isinstance(self.base_model.model, transformers.GemmaForCausalLM):
             eos_token_id = [108]
@@ -54,14 +52,10 @@ class CoTReasoner():
         outputs= [o.strip() if o.strip().endswith(".") else o.strip() + "." for o in outputs]
         print(outputs)
         return outputs
-def main(base_lm:Literal['hf', 'google', 'openai', 'anthropic','exllama',"llama2"],model_dir, lora_dir=None, mem_map=None, batch_size=1, prompt="examples/CoT/gsm8k/prompts/cot.json", resume=0, log_dir=None, temperature=0, n_sc=1, quantized='int8',llama_size=None):
+def main(base_lm:Literal['hf', 'openai','exllama',"llama2"],model_dir, lora_dir=None, mem_map=None, batch_size=1, prompt="examples/CoT/gsm8k/prompts/cot.json", resume=0, log_dir=None, temperature=0, n_sc=1, quantized='int8',llama_size=None):
 
     if base_lm == "openai":
         base_model = OpenAIModel("gpt-4-1106-preview", additional_prompt="ANSWER")
-    elif base_lm == "google":
-        base_model = BardCompletionModel("gemini-pro", additional_prompt="ANSWER")
-    elif base_lm == "anthropic":
-        base_model = ClaudeModel("claude-3-opus-20240229", additional_prompt="ANSWER")
     elif base_lm == "hf":
         base_model = HFModel(model_dir, model_dir, quantized=quantized)
     elif base_lm == 'llama2':

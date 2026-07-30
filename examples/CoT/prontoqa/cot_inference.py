@@ -5,7 +5,7 @@ import json
 import transformers
 
 from dataset import ProntoQADataset
-from reasoners.lm import HFModel, BardCompletionModel, OpenAIModel, ClaudeModel, Llama2Model, Llama3Model
+from reasoners.lm import HFModel, OpenAIModel, Llama2Model, Llama3Model
 from reasoners.algorithm import MCTS
 from reasoners.benchmark import ProntoQAEvaluatorFinal
 
@@ -28,9 +28,7 @@ class CoTReasoner():
         input_prompt += "Q: " + example.test_example.question + " " + example.test_example.query + "\nA:"
         print(f"input_prompt: '{input_prompt}'\n")
 
-        if isinstance(self.base_model, OpenAIModel) or \
-                isinstance(self.base_model, BardCompletionModel) or \
-                isinstance(self.base_model, ClaudeModel):
+        if isinstance(self.base_model, OpenAIModel):
             eos_token_id = []
         elif isinstance(self.base_model.model, transformers.GemmaForCausalLM):
             eos_token_id = [108,109]
@@ -69,12 +67,8 @@ def main(base_model='exllama', model_dir=None, temperature=0.0, log_dir="name", 
                                     mem_map=[16,22],
                                     log_output=True) #please set mem_map if you need model parallelism, e.g. mem_map = [16,22] with 2 GPUs
     else:
-        if base_model == "google":
-            language_model = BardCompletionModel("gemini-pro", additional_prompt="CONTINUE")
-        elif base_model == "openai":
+        if base_model == "openai":
             language_model = OpenAIModel("gpt-4-1106-preview", additional_prompt="CONTINUE")
-        elif base_model == "anthropic":
-            language_model = ClaudeModel("claude-3-opus-20240229", additional_prompt="CONTINUE")
         elif base_model == 'llama2':
             language_model = Llama2Model(model_dir, llama_size, max_batch_size=batch_size)   
         elif base_model == 'llama3':
