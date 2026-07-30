@@ -100,6 +100,19 @@ def test_temperature_zero_forces_argmax_even_when_stochastic_requested():
     assert bs.sampling_strategy == "argmax"
 
 
+def test_stochastic_without_a_temperature_forces_argmax():
+    # Regression test for the adjacent gap: sampling_strategy="stochastic" with no
+    # temperature at all (the default) used to sail through construction and only
+    # fail later with a TypeError inside softmax() (float / None). This is
+    # concretely reachable through examples/ToT/blocksworld/tot_inference.py: its
+    # own --temperature CLI flag is consumed by the LLM's generation config, so
+    # BeamSearch always gets constructed with temperature=None regardless of what
+    # the user passes, unless sampling_strategy stays "argmax".
+    with pytest.warns(UserWarning, match="Stochastic sampling requires a temperature"):
+        bs = BeamSearch(beam_size=2, max_depth=1, sampling_strategy="stochastic")
+    assert bs.sampling_strategy == "argmax"
+
+
 def test_invalid_sampling_strategy_falls_back_to_argmax_with_warning():
     with pytest.warns(UserWarning, match="Sampling strategy only supports"):
         bs = BeamSearch(beam_size=2, max_depth=1, sampling_strategy="bogus")
