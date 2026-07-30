@@ -5,7 +5,7 @@ from utils import get_indent
 import io
 import regex
 import math
-from reasoners.lm import OpenAIModel, Llama2Model, Llama3Model
+from reasoners.lm import OpenAIModel
 
 class SubResult(NamedTuple):
     action: str
@@ -67,11 +67,7 @@ class GSM8kWorldModel(WorldModel[GSM8kState, GSM8kAction, GSM8kExample]):
 
         if isinstance(self.base_model, OpenAIModel):
             eos_token_id = []
-        elif isinstance(self.base_model, Llama2Model):
-            eos_token_id = ["\n"]
-        elif isinstance(self.base_model, Llama3Model):
-            eos_token_id = ["\n\n", ".\n", ".\n\n","\n"]
-            
+
         outputs = self.base_model.generate(model_input,
                                     temperature=self.temperature,
                                     max_tokens=64,

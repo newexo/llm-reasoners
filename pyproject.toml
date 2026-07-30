@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llm-reasoners"
-version = "3.0.10"
+version = "3.0.12"
 description = "A library for advanced reasoning methods with large language models"
 authors = ["Shibo Hao"]
 maintainers = ["Reuben Brasher <rkbrasher@gmail.com>"]

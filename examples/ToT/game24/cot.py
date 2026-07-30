@@ -46,7 +46,7 @@ if __name__ == '__main__':
         sys.stdout = open(os.devnull, 'w')
         warnings.filterwarnings('ignore')
 
-    def main(base_lm: Literal['llama', 'llama.cpp', 'llama-2', 'hf', 'exllama'] = 'llama-2',
+    def main(base_lm: Literal['hf', 'openai'] = 'hf',
              llama_ckpts: str = llama_ckpts,
              llama_2_ckpts: str = llama_2_ckpts,
              llama_size: str = '13B',
@@ -67,41 +67,13 @@ if __name__ == '__main__':
              **kwargs):
         with open(prompts) as f:
             prompts = json.load(f)
-        if base_lm in ['llama', 'llama2']:
-            import torch
-            import torch.backends.cudnn
-            np.random.seed(0)
-            random.seed(0)
-            torch.manual_seed(0)
-            torch.cuda.manual_seed(0)
-            torch.backends.cudnn.deterministic = True
-
-        if base_lm == 'llama':
-            from reasoners.lm import LlamaModel
-            base_model = LlamaModel(llama_ckpts, llama_size, max_batch_size=batch_size)
-        elif base_lm == 'llama.cpp':
-            from reasoners.lm import LlamaCppModel
-            base_model = LlamaCppModel(llama_cpp_path, n_batch=llama_cpp_n_batch)
-        elif base_lm == 'llama-2':
-            from reasoners.lm import Llama2Model
-            base_model = Llama2Model(llama_2_ckpts, llama_size, max_batch_size=batch_size)
-        elif base_lm == 'hf':
+        if base_lm == 'hf':
             from reasoners.lm import HFModel
             base_model = HFModel(hf_path, hf_path, max_batch_size=batch_size, max_new_tokens=512,
                                  peft_pth=hf_peft_path, quantized=hf_quantized, load_awq_pth=hf_load_awq_path)
-        elif base_lm == 'exllama':
-            from reasoners.lm import ExLlamaModel
-            base_model = ExLlamaModel(exllama_model_dir, exllama_lora_dir, mem_map=exllama_mem_map,
-                                      max_batch_size=batch_size, max_new_tokens=512, max_seq_length=2048)
         elif base_lm == 'openai':
             from reasoners.lm import OpenAIModel
             base_model = OpenAIModel(openai_mode)
-        elif base_lm == 'gemini':
-            from reasoners.lm import BardCompletionModel
-            base_model = BardCompletionModel('gemini-pro')
-        elif base_lm == 'claude':
-            from reasoners.lm import ClaudeModel
-            base_model = ClaudeModel('claude-3-opus-20240229')
         else:
             assert False, f'cannot resolve {base_lm=}'
         cot_game24(base_model=base_model, disable_log=disable_log or local_rank > 0, kwargs=kwargs)

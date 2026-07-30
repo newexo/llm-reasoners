@@ -3,9 +3,6 @@ import json
 from reasoners.benchmark import BWEvaluator
 import fire
 from reasoners.lm.openai_model import OpenAIModel
-from reasoners.lm.gemini_model import BardCompletionModel
-from reasoners.lm.anthropic_model import ClaudeModel
-from reasoners.lm import  Llama2Model, Llama3Model
 class CoTReasoner():
     def __init__(self, base_model, temperature=0.8, model_type="completion"):
         self.base_model = base_model
@@ -36,16 +33,8 @@ def main(model_dir, data_path, prompt_path, disable_log=False, batch_size=1, con
                         #   max_new_tokens=300, max_seq_length=2048)
 
     
-    if model_dir == "google":
-        base_model = BardCompletionModel("gemini-pro", additional_prompt="CONTINUE")
-    elif model_dir == "openai":
+    if model_dir == "openai":
         base_model = OpenAIModel("gpt-4-1106-preview", additional_prompt="CONTINUE")
-    elif model_dir == "anthropic":
-        base_model = ClaudeModel("claude-3-opus-20240229", additional_prompt="CONTINUE")
-    elif model_dir == 'llama2':
-        base_model = Llama2Model(llama_path, llama_size, max_batch_size=batch_size)
-    elif model_dir == 'llama3':
-        base_model = Llama3Model(llama_path, llama_size, max_batch_size=batch_size)
     else:
         base_model = HFModel(model_pth=model_dir, tokenizer_pth=model_dir, quantized=quantized)
     with open(prompt_path) as f:

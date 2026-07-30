@@ -91,7 +91,7 @@ if __name__ == '__main__':
     import json
     import warnings
     import fire
-    from reasoners.lm import OpenAIModel, Llama2Model, Llama3Model
+    from reasoners.lm import OpenAIModel
     import random
     import torch
     import torch.backends.cudnn
@@ -113,14 +113,7 @@ if __name__ == '__main__':
              temperature: float = 0.7,
              **kwargs):
         
-        if model == 'llama2':
-            base_model = Llama2Model(model_dir, llama_size, max_batch_size=batch_size)
-            raise SystemExit("Non't support yet")
-        elif model == 'llama3':
-            base_model = Llama3Model(model_dir, llama_size, max_batch_size=batch_size)
-            raise SystemExit("Non't support yet")
-        else:
-            base_model = OpenAIModel(model=model, temperature=temperature, max_tokens=1000)
+        base_model = OpenAIModel(model=model, temperature=temperature, max_tokens=1000)
         #log_dir = 'logs/crosswords_dfs/test-gpt3.5'
         tot_crosswords(base_model=base_model,
                   batch_size=batch_size, # not used
