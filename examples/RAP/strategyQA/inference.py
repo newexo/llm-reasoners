@@ -123,7 +123,7 @@ if __name__ == '__main__':
     import json
     import warnings
     import fire
-    from reasoners.lm import LlamaCppModel, LlamaModel, Llama2Model, Llama3Model
+    from reasoners.lm import HFModel
     import random
     import torch
     import torch.backends.cudnn
@@ -137,12 +137,9 @@ if __name__ == '__main__':
         warnings.filterwarnings('ignore')
 
 
-    def main(base_lm: str = 'llama', #llama means llama_v1 and llama2 means llama_v2
-             llama_ckpt: str = llama_ckpts,
-             llama_2_ckpt: str = llama_2_ckpts,
-             llama_3_ckpt :str = llama_3_ckpts,
-             llama_size: str = '30B',
-             llama_cpp_path: str = None,
+    def main(base_lm: str = 'hf',
+             model_dir: str = None,
+             quantized: str = 'nf4',
              batch_size: int = 2,
              max_seq_len: int = 2048,
              interactive_prompt: str = 'examples/RAP/strategyQA/prompts/interactive_examples-1.json',
@@ -151,22 +148,13 @@ if __name__ == '__main__':
              disable_log: bool = False,
              disable_tqdm: bool = False,
              **kwargs):
-        # set base_lm = 'llama' and llama_ckpt = '13B/30B/65B' to use llama with torchscale
-        # else set base_lm = 'llama.cpp' and llama_cpp_path = the checkpoint to use llama.cpp
-
         with open(interactive_prompt) as f:
             interactive_prompt = json.load(f)
         with open(useful_prompt) as f:
             useful_prompt = json.load(f)
         decompose_prompt = get_prompt_examples(path=decompose_prompt)
-        if base_lm == 'llama':
-            base_model = LlamaModel(llama_ckpt, llama_size, max_batch_size=batch_size, max_seq_len=max_seq_len)
-        elif base_lm == 'llama.cpp':
-            base_model = LlamaCppModel(llama_cpp_path)
-        elif base_lm == 'llama2':
-            base_model = Llama2Model(llama_2_ckpt, llama_size, max_batch_size=batch_size,max_seq_len=max_seq_len)
-        elif base_lm == 'llama3':
-            base_model = Llama3Model(llama_3_ckpt, llama_size, max_batch_size=batch_size,max_seq_len=max_seq_len)
+        if base_lm == 'hf':
+            base_model = HFModel(model_dir, model_dir, max_batch_size=batch_size, quantized=quantized)
         else:
             assert False, f'cannot resolve {base_lm=}'
         rap_strategyQA(base_model=base_model,

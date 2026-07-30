@@ -3,7 +3,7 @@ from typing import NamedTuple, List, Tuple
 from reasoners import WorldModel, LanguageModel
 from prompts.crosswords import * 
 from utils import *
-from reasoners.lm import OpenAIModel, Llama2Model, Llama3Model
+from reasoners.lm import OpenAIModel
 
 CrosswordsState = Tuple[MiniCrosswordsEnv, List, dict]
 CrosswordsAction = Tuple[str, float]
@@ -49,10 +49,6 @@ class CrosswordsWorldModel(WorldModel):
             else:
                 if isinstance(self.base_model, OpenAIModel):
                     eos_token_id = []
-                elif isinstance(self.base_model, Llama2Model):
-                    eos_token_id = ["\n"]
-                elif isinstance(self.base_model, Llama3Model):
-                    eos_token_id = ["\n\n", ".\n", ".\n\n","\n"]
                 res = self.base_model.generate(prompt,
                                             num_return_sequences=1,
                                             stop=None,
