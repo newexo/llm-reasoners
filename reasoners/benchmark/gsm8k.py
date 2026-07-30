@@ -61,9 +61,6 @@ class GSM8KEvaluator(Evaluator):
                                                                                     k=num_shot))
             return ret
             
-        elif sample_prompt_type == "grace":
-            return None
-            
         else:
             raise NotImplementedError
         return prompt
