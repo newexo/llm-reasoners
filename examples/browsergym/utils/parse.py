@@ -31,13 +31,6 @@ def parse_common_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--max_tokens", type=int, default=2048, help="Maximum tokens for the model."
     )
-    parser.add_argument(
-        "--backend",
-        type=str,
-        default="openai",
-        choices=["openai", "sglang"],
-        help="Backend for the model. Currently support `openai` and `sglang`.",
-    )
     # Environment parameters
     parser.add_argument(
         "--max_steps",

@@ -1,7 +1,7 @@
 import os
 import openai
 import numpy as np
-from typing import Optional, Union, Literal
+from typing import Optional, Union
 import time
 
 from reasoners.base import LanguageModel, GenerateOutput
@@ -18,28 +18,19 @@ class OpenAIModel(LanguageModel):
         max_tokens: int = 2048,
         temperature=0.0,
         additional_prompt=None,
-        backend: Literal["openai", "sglang"] = "openai",
         is_instruct_model: bool = False,
     ):
         self.model = model
         self.max_tokens = max_tokens
         self.temperature = temperature
-        self.backend = backend
         self.additional_prompt = additional_prompt
         self.is_instruct_model = is_instruct_model
         self.__init_client__()
 
     def __init_client__(self):
-        if self.backend == "openai":
-            self.client = OpenAI(
-                api_key=os.getenv("OPENAI_API_KEY", None),
-            )
-        elif self.backend == "sglang":
-            self.client = OpenAI(
-                base_url=os.getenv("SGLANG_API_URL", None),
-            )
-        else:
-            raise ValueError(f"Invalid backend: {self.backend}")
+        self.client = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY", None),
+        )
 
     def generate(
         self,
@@ -148,12 +139,4 @@ class OpenAIModel(LanguageModel):
 
 if __name__ == "__main__":
     model = OpenAIModel(model="gpt-3.5-turbo")
-    print("-------OpenAI client-------")
-    print(model.generate(["How to go to Shanghai from Beijing?"]))
-    print("-------SGLang client-------")
-    model = OpenAIModel(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        backend="sglang",
-        is_instruct_model=True,
-    )
     print(model.generate(["How to go to Shanghai from Beijing?"]))
