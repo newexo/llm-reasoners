@@ -66,7 +66,6 @@ def run_task(args):
         model=args.model,
         temperature=args.temperature,
         max_tokens=args.max_tokens,
-        backend=args.backend,
     )
 
     world_model = EnvironmentGym(env=env, obs_preprocessor=obs_preprocessor)

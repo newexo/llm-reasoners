@@ -50,11 +50,9 @@ one**:
 
 | Cell | Model | Gated? | Notes |
 |---|---|---|---|
-| ExLlama | ~~`TheBloke/Llama-2-70B-GPTQ`~~ | — | **Removed from this fork.** Left commented out for reference only; do not run. |
 | HFModel | `meta-llama/Llama-3.1-8B` | Yes — needs `HF_TOKEN` + license acceptance | `quantized='nf4'`, matches the notebook's original saved outputs most closely (same model family as the 70B reference run) |
 | HFModel | `Qwen/Qwen2.5-7B` | No | Apache-2.0, generally stronger reasoning benchmarks than Llama-3.1-8B |
 | HFModel | `mistralai/Mistral-7B-v0.3` | No | Apache-2.0, well-established Llama drop-in since 2023 |
-| SGLang | `meta-llama/Llama-3.1-8B` | Yes | Needs a separately-running SGLang server; not covered by this Docker setup |
 
 All three `HFModel` options use `bitsandbytes` 4-bit (`nf4`) quantization — each fits comfortably within
 12GB VRAM (~4-5GB weights) with headroom for the MCTS search's KV cache.
