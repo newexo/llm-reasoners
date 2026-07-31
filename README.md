@@ -45,14 +45,11 @@ deliberately (see [What's different in this fork](#whats-different-in-this-fork)
   - [Least-to-most prompting](examples/Least-to-most) ([Zhou et al., 2022](https://arxiv.org/abs/2205.10625))
   - [Tree-of-Thoughts, DFS](examples/ToT) ([Yao et al., 2023](https://arxiv.org/abs/2305.10601))
   - [Self-Eval Guided Decoding, Beam Search](examples/Self-Eval) ([Xie et al., 2023](https://arxiv.org/abs/2305.00633))
-  - [Eurus](examples/Eurus) ([Yuan et al., 2024](https://arxiv.org/abs/2404.02078))
   - [PromptAgent](examples/PromptAgent) ([Wang et al., 2023](https://arxiv.org/abs/2310.16427))
   - [DRPO](examples/DRPO) ([Singla et al., 2024](https://aclanthology.org/2024.emnlp-main.1220/))
   
   </details>
 
-- **Intuitive Visualization and Interpretation**: Our library provides a [visualization tool](https://www.llm-reasoners.net/) to aid users in comprehending the reasoning process. Even for complex reasoning algorithms like Monte-Carlo Tree Search, users can easily diagnose and understand the process with **one line of python code**. See an exmaple in the tutorial [notebook](demo.ipynb).
- 
 - **Efficient Reasoning with LLM**: Our library supports `huggingface transformers` for local models and the `OpenAI API` for remote models.
 
 - **Rigorous Implementation and Reproducibility**: We prioritize precision and reliability in our implementations, ensuring that our algorithms are not just theoretical concepts but practically usable tools. All methods implemented in LLM Reasoners are carefully engineered to be faithful to their original formulations and performance. It powers our [analysis](https://arxiv.org/abs/2404.05221) of reasoning algorithms published in COLM2024.
@@ -113,7 +110,9 @@ deliberately (see [What's different in this fork](#whats-different-in-this-fork)
 
 ![Library Structure](assets/figure2_reasoners_v5.png)
 
-We abstract an LLM reasoning algorithm into three key components, *reward function*, *world model*, and *search algorithm* (see the formulation in our [paper](https://arxiv.org/abs/2404.05221)), corresponding to three classes in the library, <tt>SearchConfig</tt>, <tt>WorldModel</tt> and <tt>SearchAlgorithm</tt> respectively. Besides, there are <tt>LLM APIs</tt> to power other modules, <tt>Benchmark</tt>, and <tt>Visualization</tt> to evaluate or debug the reasoning algorithm (middle). To implement a reasoning algorithm for a certain domain (a <tt>Reasoner</tt> object), a user may inherit the <tt>SearchConfig</tt> and <tt>WorldModel</tt> class, and import a pre-implemented <tt>SearchAlgorithm</tt>. We also show a concrete example of solving Blocksworld with RAP using LLM Reasoners (bottom).
+We abstract an LLM reasoning algorithm into three key components, *reward function*, *world model*, and *search algorithm* (see the formulation in our [paper](https://arxiv.org/abs/2404.05221)), corresponding to three classes in the library, <tt>SearchConfig</tt>, <tt>WorldModel</tt> and <tt>SearchAlgorithm</tt> respectively. Besides, there are <tt>LLM APIs</tt> to power other modules and a <tt>Benchmark</tt> module to evaluate the reasoning algorithm (middle). To implement a reasoning algorithm for a certain domain (a <tt>Reasoner</tt> object), a user may inherit the <tt>SearchConfig</tt> and <tt>WorldModel</tt> class, and import a pre-implemented <tt>SearchAlgorithm</tt>. We also show a concrete example of solving Blocksworld with RAP using LLM Reasoners (bottom).
+
+Note: the figure below still shows a <tt>Visualization</tt> module, which has been removed from this fork (it uploaded reasoning traces to a third-party hosted service with no consent prompt).
 
 
 ## Quick Tour
@@ -217,7 +216,7 @@ class BWConfig(SearchConfig):
             goal_reward = goal_reached
         # the reward is a combination of intuition and goal satisfaction
         reward = intuition * self.reward_alpha + goal_reward * (1 - self.reward_alpha)
-        # return the reward and an additional dictionary (to be saved in the log for visualization later)
+        # return the reward and an additional dictionary (saved in the trace for later inspection)
         return reward, {'intuition': intuition, 'goal_reached': goal_reached}
 ```
 Now, we are ready to apply a reasoning algorithm to solve the problem:
@@ -232,7 +231,6 @@ with open(prompt_path) as f:
     prompt = json.load(f)
 world_model = BlocksWorldModel(base_model=base_model, prompt=prompt)
 config = BWConfig(base_model=llama_model, prompt=prompt)
-# save the history of every iteration for visualization
 search_algo = MCTS(output_trace_in_each_iter=True)
 reasoner = Reasoner(world_model=world_model, search_config=config, search_algo=search_algo)
 for i, example in enumerate(dataset):
@@ -241,27 +239,6 @@ for i, example in enumerate(dataset):
     with open(os.path.join(log_dir, 'algo_output', f'{resume + i + 1}.pkl'), 'wb') as f:
         pickle.dump(algo_output, f)
 ```
-Finally, we can easily visualize the reasoning process:
-```python
-import pickle
-from reasoners.visualization import visualize
-with open("logs/bw_MCTS/xxx/algo_output/1.pkl", 'rb') as f:
-    mcts_result = pickle.load(f)
-
-from reasoners.visualization.tree_snapshot import NodeData
-from reasoners.algorithm.mcts import MCTSNode
-
-# by default, a state will be presented along with the node, and the reward with saved dictionary in `SearchConfig.reward` will be presented along with the edge. 
-# we can also define a helper function to customize what we want to see in the visualizer.
-def blocksworld_node_data_factory(n: MCTSNode) -> NodeData:
-    return NodeData({"block state": n.state.blocks_state if n.state else None,
-                     "satisfied": n.fast_reward_details if n.fast_reward_details else "Not expanded"})
-def blocksworld_edge_data_factory(n: MCTSNode) -> EdgeData:
-    return EdgeData({"reward": n.reward, "intuition": n.fast_reward_details["intuition"]})
-visualize(mcts_result, node_data_factory=blocksworld_node_data_factory,
-                       edge_data_factory=blocksworld_edge_data_factory)
-```
-Then a URL of the visualized results will pop up. The figure will be interactive and look like the examples shown on our [demo website](https://llm-reasoners.net/).
 
 ## Installation
 

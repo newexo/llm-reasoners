@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "llm-reasoners"
-version = "3.0.14"
+version = "3.0.15"
 description = "A library for advanced reasoning methods with large language models"
 authors = ["Shibo Hao"]
 maintainers = ["Reuben Brasher <rkbrasher@gmail.com>"]
@@ -8,9 +8,6 @@ license = "Apache-2.0"
 readme = "README.md"
 packages = [{include = "reasoners"}]
 include = ["reasoners/**/*.md"]
-
-[tool.poetry.scripts]
-reasoners-visualizer = "reasoners.visualization:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"

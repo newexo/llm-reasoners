@@ -114,19 +114,6 @@ The model will be tested on a set of 180 seed samples such as:
 
 You can see the full trace in the log folder.
 
-## Visualization
-
-The LLM Reasoners platform includes a powerful visualization feature, enabling users to effortlessly explore reasoning traces.
-
-![DRPO Visualization Example](https://github.com/sora1998/llm-reasoners/blob/main/examples/DRPO/imgs/visualization.png?raw=true "DRPO Visualization")
-
-For an interactive experience, you can access the reasoning tree directly through this link: [LLM Reasoners Visualizer](https://www.llm-reasoners.net/visualizer/e3791bf4-cbe2-4b09-8167-2a19e5b42bcb?accessKey=8bc6f9c8).
-
-To try it yourself, we’ve included the necessary code for the demo. Run the following command:
-
-```bash
-python visualize_log.py
-```
 ## Reference
 
 ```bibtex

@@ -8,23 +8,11 @@ from tqdm import tqdm
 from datetime import datetime
 
 from reasoners import LanguageModel, Reasoner, SearchAlgorithm
-from reasoners.algorithm import BeamSearch, MCTS, MCTSNode
-from reasoners.visualization import TreeLog
+from reasoners.algorithm import BeamSearch, MCTS
 
 from world_model import Game24WorldModel, Game24State, Game24Action
 from search_config import Game24Config
 import utils
-
-
-def node_visualizer(x: MCTSNode):
-    ret = {}
-    if x.action is not None:
-        ret['last_step'] = x.action
-    if x.state is not None:
-        ret = {'current': x.state.current}
-        if x.state.output is not None:
-            ret['output'] = x.state.output
-    return ret
 
 
 def rap_game24(base_model: LanguageModel,
@@ -80,10 +68,6 @@ def rap_game24(base_model: LanguageModel,
                 print(log_str, file=f)
             with open(os.path.join(log_dir, 'algo_output', f'{resume + i + 1}.pkl'), 'wb') as f:
                 pickle.dump(algo_output, f)
-            if isinstance(search_algo, MCTS):
-                with open(os.path.join(log_dir, 'algo_output', f'{resume + i + 1}.json'), 'w') as f:
-                    # noinspection PyTypeChecker
-                    print(TreeLog.from_mcts_results(algo_output, node_data_factory=node_visualizer), file=f)
 
 
 if __name__ == '__main__':

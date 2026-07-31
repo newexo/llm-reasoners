@@ -66,8 +66,7 @@ Run cells top to bottom after the model cell:
    typically produces an invalid plan.
 4. **RAP** — `MCTS`, tracks the actual block configuration as state via an LLM-simulated `step()`. This is
    the notebook's payoff: where CoT/ToT fail, RAP is expected to find a valid plan.
-5. **Visualization** — uploads the search tree and prints a link to `llm-reasoners.net/visualizer/...`.
-6. **Full evaluator run** (last cell) — runs the whole `BWEvaluator` pipeline over the dataset, including
+5. **Full evaluator run** (last cell) — runs the whole `BWEvaluator` pipeline over the dataset, including
    real VAL plan validation (`Plan valid` / `Plan failed to execute` in the output).
 
 ### Expected outcome, and a caveat
