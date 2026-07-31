@@ -3,7 +3,6 @@ from typing import Type, Callable, Optional, Literal
 
 import numpy as np
 from datasets import load_dataset
-from reasoners.visualization import TreeLog
 from tqdm import tqdm
 from datetime import datetime
 

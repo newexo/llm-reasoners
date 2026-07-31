@@ -13,7 +13,6 @@ LLM-Reasoners enhance this setup with tree search algorithms, using LLMs to gene
 - `inference_beam.py`: Performs a tree search on the environment w. Beam Search.
 - `gym_env.py`: Implements `EnvironmentGym`, wrapping the BrowserGym environment. `EnvironmentGym` functions like a `WorldModel`, using the environment for state transitions. Tree search requires careful backtracking, achieved by storing and replaying action histories, though this method is generic and applicable to any OpenAI gym-like environment.
 - `search_config.py`: Defines `SearchConfigBrowsergym` for node generation/evaluation and reward calculation. This is the core of the tree search.
-- `visualize.py`: Visualizes the search tree with saved search results in `.pickle` files.
 
 ## Setup
 
@@ -156,19 +155,6 @@ python inference_beam.py \
     --max_depth <max_depth> \
 
 ```
-
-## Visualize Search Tree
-
-One key feature of LLM-Reasoners planner is we provide an online visualizer to smoothly visualize and debug the search tree.
-
-```bash
-python visualize.py \
-    --task_name <task_name> \
-    --exp_dir <exp_dir> \
-```
-
-If running successfully, you should see a visualizer link like this (hosted by LLM-Reasoners), e.g.,
-https://main.d1puk3wdon4rk8.amplifyapp.com/visualizer/266f7660-0b9c-4cb8-96f3-1cd4aa719afa?accessKey=75503b6e
 
 ## Acknowledgements
 

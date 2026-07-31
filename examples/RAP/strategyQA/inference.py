@@ -2,24 +2,18 @@ import pickle
 from typing import Type, Callable, Optional
 
 import numpy as np
-from reasoners.visualization import TreeLog
 from tqdm import tqdm
 from datetime import datetime
 import json
 
 from reasoners import LanguageModel, Reasoner, SearchAlgorithm
-from reasoners.algorithm import MCTS, MCTSNode
+from reasoners.algorithm import MCTS
 
 from world_model import StrategyQAWorldModel, StrategyQAState, StrategyQAAction
 from search_config import StrategyQAConfig
 import utils
 from dataset import get_prompt_examples, get_examples, extract_golden_answer
 
-
-def node_visualizer(x: MCTSNode):
-    if not x.state:
-        return {}
-    return {"question": x.state[-1].sub_question, "answer": x.state[-1].sub_answer}
 
 def rap_cum_reward(cum_rewards):
     return sum(cum_rewards) / (len(cum_rewards) + 1)

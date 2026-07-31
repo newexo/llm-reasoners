@@ -98,7 +98,7 @@ if __name__ == "__main__":
         print("Task completed successfully.")
     else:
         print(
-            "Task didn't reach the goal. Please check the detailed result w/ visualization (python visualize.py --task_name <task_name>).",
+            f"Task didn't reach the goal. Please check the detailed result in {os.path.join(args.exp_dir, args.task_name)}/result.pkl.",
         )
 
     end_time = time.time()
